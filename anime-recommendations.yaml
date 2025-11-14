@@ -914,6 +914,25 @@ components:
             relations:
               type: array
               description: Anime terkait (sequel, prequel, side story, dll)
+              items:
+                type: object
+                properties:
+                  relation:
+                    type: string
+                    description: Tipe relasi (Sequel, Prequel, Side story, dll)
+                  entry:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        mal_id:
+                          type: integer
+                        type:
+                          type: string
+                        name:
+                          type: string
+                        url:
+                          type: string
             theme:
               type: object
               properties:
@@ -928,6 +947,20 @@ components:
             external:
               type: array
               description: Link eksternal (Official site, dll)
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  url:
+                    type: string
             streaming:
               type: array
               description: Platform streaming
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  url:
+                    type: string
