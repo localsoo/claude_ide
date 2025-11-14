@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: Jikan API untuk Rekomendasi Anime
   version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
   description: |
     API untuk pencarian anime, detail anime, dan rekomendasi menggunakan Jikan - Unofficial MyAnimeList API.
 
@@ -23,6 +26,8 @@ info:
 servers:
   - url: https://api.jikan.moe/v4
     description: Jikan REST API v4 Production Server
+
+security: []
 
 paths:
   /anime:
@@ -287,6 +292,8 @@ paths:
                       - mal_id: 21
                         title: "One Piece"
                     content: "Both are long-running shounen anime with great character development"
+        "400":
+          description: Bad request - parameter tidak valid
 
   /anime/{id}/recommendations:
     get:
@@ -328,6 +335,8 @@ paths:
                         votes:
                           type: integer
                           description: Jumlah votes dari user
+        "404":
+          description: Anime tidak ditemukan
 
   /top/anime:
     get:
@@ -395,6 +404,8 @@ paths:
                     rank: 1
                     popularity: 3
                     type: "TV"
+        "400":
+          description: Bad request - parameter tidak valid
 
   /seasons/now:
     get:
@@ -438,6 +449,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/AnimeSearchResult'
+        "400":
+          description: Bad request - parameter tidak valid
 
   /seasons/{year}/{season}:
     get:
@@ -489,6 +502,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/AnimeSearchResult'
+        "400":
+          description: Bad request - parameter tidak valid
 
   /seasons/upcoming:
     get:
@@ -525,6 +540,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/AnimeSearchResult'
+        "400":
+          description: Bad request - parameter tidak valid
 
   /random/anime:
     get:
@@ -543,6 +560,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AnimeDetails'
+        "404":
+          description: Anime tidak ditemukan
 
   /genres/anime:
     get:
@@ -589,6 +608,8 @@ paths:
                   - mal_id: 8
                     name: "Drama"
                     count: 2900
+        "400":
+          description: Bad request - parameter tidak valid
 
   /anime/{id}/characters:
     get:
@@ -629,6 +650,8 @@ paths:
                           description: Main, Supporting, dll
                         voice_actors:
                           type: array
+        "404":
+          description: Anime tidak ditemukan
 
   /anime/{id}/reviews:
     get:
@@ -669,6 +692,8 @@ paths:
                           type: string
                         votes:
                           type: integer
+        "404":
+          description: Anime tidak ditemukan
 
 components:
   schemas:
@@ -725,46 +750,39 @@ components:
           type: string
           description: Judul anime (Romaji/Japanese)
         title_english:
-          type: string
-          nullable: true
+          type: [string, "null"]
           description: Judul bahasa Inggris
         title_japanese:
-          type: string
-          nullable: true
+          type: [string, "null"]
           description: Judul bahasa Jepang
         type:
           type: string
           description: Tipe (TV, Movie, OVA, Special, ONA, Music)
           enum: ["TV", "Movie", "OVA", "Special", "ONA", "Music"]
         episodes:
-          type: integer
-          nullable: true
+          type: [integer, "null"]
           description: Jumlah episode
         status:
           type: string
           description: Status tayang
         score:
-          type: number
+          type: [number, "null"]
           format: float
-          nullable: true
           description: Rating rata-rata (0-10)
         scored_by:
           type: integer
           description: Jumlah user yang memberi rating
         rank:
-          type: integer
-          nullable: true
+          type: [integer, "null"]
           description: Ranking di MyAnimeList
         popularity:
           type: integer
           description: Ranking popularitas
         synopsis:
-          type: string
-          nullable: true
+          type: [string, "null"]
           description: Sinopsis anime
         rating:
-          type: string
-          nullable: true
+          type: [string, "null"]
           description: Rating usia (G, PG, PG-13, R-17+, R+, Rx)
         images:
           $ref: '#/components/schemas/AnimeImages'
@@ -787,19 +805,16 @@ components:
         title:
           type: string
         title_english:
-          type: string
-          nullable: true
+          type: [string, "null"]
         title_japanese:
-          type: string
-          nullable: true
+          type: [string, "null"]
         type:
           type: string
         source:
           type: string
           description: Sumber adaptasi (Manga, Light novel, Original, dll)
         episodes:
-          type: integer
-          nullable: true
+          type: [integer, "null"]
         status:
           type: string
         aired:
@@ -809,23 +824,20 @@ components:
               type: string
               format: date-time
             to:
-              type: string
+              type: [string, "null"]
               format: date-time
-              nullable: true
         duration:
           type: string
           description: Durasi per episode
         rating:
           type: string
         score:
-          type: number
+          type: [number, "null"]
           format: float
-          nullable: true
         scored_by:
           type: integer
         rank:
-          type: integer
-          nullable: true
+          type: [integer, "null"]
         popularity:
           type: integer
         members:
@@ -835,19 +847,15 @@ components:
           type: integer
           description: Jumlah user yang favorite anime ini
         synopsis:
-          type: string
-          nullable: true
+          type: [string, "null"]
         background:
-          type: string
-          nullable: true
+          type: [string, "null"]
           description: Info background/trivia
         season:
-          type: string
-          nullable: true
-          enum: ["winter", "spring", "summer", "fall"]
+          type: [string, "null"]
+          enum: ["winter", "spring", "summer", "fall", null]
         year:
-          type: integer
-          nullable: true
+          type: [integer, "null"]
         broadcast:
           type: object
           properties:
