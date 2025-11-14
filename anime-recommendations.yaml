@@ -1,0 +1,933 @@
+openapi: 3.1.0
+info:
+  title: Jikan API untuk Rekomendasi Anime
+  version: 1.0.0
+  description: |
+    API untuk pencarian anime, detail anime, dan rekomendasi menggunakan Jikan - Unofficial MyAnimeList API.
+
+    **Fitur:**
+    - 🔍 Pencarian anime berdasarkan judul
+    - 📺 Detail lengkap anime (judul, synopsis, rating, episodes, dll)
+    - 🎬 Rekomendasi anime dari komunitas MyAnimeList
+    - 🌟 Anime top rated berdasarkan kategori
+    - 📅 Anime season terbaru (musim ini, upcoming)
+    - 🎲 Random anime discovery
+    - 🎭 Daftar genre anime
+
+    **Keunggulan Jikan API:**
+    - ✅ **GRATIS** - Tidak perlu API key
+    - ✅ Rate limit: 60 requests/menit, 3 requests/detik
+    - ✅ Data lengkap dari MyAnimeList
+    - ✅ Cache 24 jam untuk performa optimal
+
+servers:
+  - url: https://api.jikan.moe/v4
+    description: Jikan REST API v4 Production Server
+
+paths:
+  /anime:
+    get:
+      operationId: searchAnime
+      summary: Cari anime berdasarkan judul atau kata kunci
+      description: |
+        Mencari anime berdasarkan judul, kata kunci, atau berbagai filter.
+        Mendukung filter genre, type, status, rating, dan lainnya.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Query pencarian (judul anime)
+          example: "Naruto"
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["tv", "movie", "ova", "special", "ona", "music"]
+          description: Tipe anime
+          example: "tv"
+        - name: score
+          in: query
+          required: false
+          schema:
+            type: number
+          description: Minimum score (0-10)
+          example: 7.5
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["airing", "complete", "upcoming"]
+          description: Status anime
+        - name: rating
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["g", "pg", "pg13", "r17", "r", "rx"]
+          description: Rating usia (g=All Ages, pg13=Teens 13+, r=17+, rx=Adult)
+        - name: genres
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter genre (pisahkan dengan koma untuk multiple)
+          example: "1,2"
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["title", "start_date", "end_date", "score", "scored_by", "rank", "popularity", "members", "favorites"]
+            default: "score"
+          description: Sorting berdasarkan field tertentu
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["desc", "asc"]
+            default: "desc"
+          description: Urutan sorting
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+            maximum: 25
+          description: Jumlah hasil per halaman (max 25)
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman untuk pagination
+      responses:
+        "200":
+          description: Hasil pencarian anime berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  data:
+                    type: array
+                    description: Array hasil pencarian anime
+                    items:
+                      $ref: '#/components/schemas/AnimeSearchResult'
+              example:
+                pagination:
+                  last_visible_page: 10
+                  has_next_page: true
+                  current_page: 1
+                  items:
+                    count: 25
+                    total: 250
+                    per_page: 25
+                data:
+                  - mal_id: 20
+                    title: "Naruto"
+                    title_english: "Naruto"
+                    type: "TV"
+                    episodes: 220
+                    score: 7.99
+                    scored_by: 1200000
+                    status: "Finished Airing"
+                    rating: "PG-13 - Teens 13 or older"
+                    synopsis: "Moments prior to Naruto Uzumaki's birth..."
+                    images:
+                      jpg:
+                        image_url: "https://cdn.myanimelist.net/images/anime/13/17405.jpg"
+        "400":
+          description: Bad request - parameter tidak valid
+        "429":
+          description: Rate limit exceeded
+
+  /anime/{id}/full:
+    get:
+      operationId: getAnimeFullDetails
+      summary: Ambil detail lengkap anime (semua data)
+      description: |
+        Mengambil informasi detail LENGKAP tentang anime berdasarkan MyAnimeList ID.
+        Termasuk characters, staff, relations, episodes, dan semua data lainnya.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: MyAnimeList ID anime
+          example: 20
+      responses:
+        "200":
+          description: Detail lengkap anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnimeFullDetails'
+        "404":
+          description: Anime tidak ditemukan
+
+  /anime/{id}:
+    get:
+      operationId: getAnimeDetails
+      summary: Ambil detail anime standar
+      description: |
+        Mengambil informasi detail anime berdasarkan MyAnimeList ID.
+        Termasuk judul, synopsis, score, episodes, studio, genre, dan lainnya.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: MyAnimeList ID anime (dapatkan dari search)
+          example: 20
+      responses:
+        "200":
+          description: Detail anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnimeDetails'
+              example:
+                data:
+                  mal_id: 20
+                  title: "Naruto"
+                  title_english: "Naruto"
+                  type: "TV"
+                  episodes: 220
+                  status: "Finished Airing"
+                  aired:
+                    from: "2002-10-03T00:00:00+00:00"
+                    to: "2007-02-08T00:00:00+00:00"
+                  score: 7.99
+                  scored_by: 1200000
+                  rank: 750
+                  popularity: 5
+                  synopsis: "Moments prior to Naruto Uzumaki's birth..."
+                  genres:
+                    - mal_id: 1
+                      name: "Action"
+                    - mal_id: 2
+                      name: "Adventure"
+                  studios:
+                    - mal_id: 1
+                      name: "Studio Pierrot"
+        "404":
+          description: Anime tidak ditemukan
+
+  /recommendations/anime:
+    get:
+      operationId: getAnimeRecommendations
+      summary: Ambil rekomendasi anime dari komunitas
+      description: |
+        Mendapatkan rekomendasi anime yang dibuat oleh komunitas MyAnimeList.
+        Rekomendasi dibuat berdasarkan similaritas yang dilihat oleh user.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman hasil
+      responses:
+        "200":
+          description: Rekomendasi anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        entry:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              mal_id:
+                                type: integer
+                              title:
+                                type: string
+                              images:
+                                $ref: '#/components/schemas/AnimeImages'
+                        content:
+                          type: string
+                          description: Alasan rekomendasi dari user
+                        user:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+              example:
+                data:
+                  - entry:
+                      - mal_id: 20
+                        title: "Naruto"
+                      - mal_id: 21
+                        title: "One Piece"
+                    content: "Both are long-running shounen anime with great character development"
+
+  /anime/{id}/recommendations:
+    get:
+      operationId: getAnimeSpecificRecommendations
+      summary: Ambil rekomendasi berdasarkan anime tertentu
+      description: |
+        Mendapatkan anime yang direkomendasikan berdasarkan anime tertentu.
+        Berguna untuk menemukan anime serupa.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: MyAnimeList ID anime sumber
+          example: 20
+      responses:
+        "200":
+          description: Rekomendasi berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        entry:
+                          type: object
+                          properties:
+                            mal_id:
+                              type: integer
+                            title:
+                              type: string
+                            images:
+                              $ref: '#/components/schemas/AnimeImages'
+                        votes:
+                          type: integer
+                          description: Jumlah votes dari user
+
+  /top/anime:
+    get:
+      operationId: getTopAnime
+      summary: Dapatkan anime top rated
+      description: |
+        Mendapatkan daftar anime dengan rating tertinggi di MyAnimeList.
+        Bisa filter berdasarkan type (tv, movie, ova, dll) dan rating.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["tv", "movie", "ova", "special", "ona", "music"]
+          description: Filter berdasarkan tipe anime
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["airing", "upcoming", "bypopularity", "favorite"]
+          description: Filter khusus (sedang tayang, upcoming, populer, favorit)
+        - name: rating
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["g", "pg", "pg13", "r17", "r", "rx"]
+          description: Filter berdasarkan rating usia
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+            maximum: 25
+          description: Jumlah hasil per halaman
+      responses:
+        "200":
+          description: Top anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnimeSearchResult'
+              example:
+                data:
+                  - mal_id: 5114
+                    title: "Fullmetal Alchemist: Brotherhood"
+                    score: 9.10
+                    rank: 1
+                    popularity: 3
+                    type: "TV"
+
+  /seasons/now:
+    get:
+      operationId: getCurrentSeasonAnime
+      summary: Dapatkan anime season saat ini
+      description: |
+        Mendapatkan daftar anime yang sedang tayang di season saat ini.
+        Otomatis detect season berdasarkan bulan saat ini.
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["tv", "movie", "ova", "special", "ona"]
+          description: Filter berdasarkan tipe
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+            maximum: 25
+      responses:
+        "200":
+          description: Anime season ini berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnimeSearchResult'
+
+  /seasons/{year}/{season}:
+    get:
+      operationId: getSeasonAnime
+      summary: Dapatkan anime berdasarkan season tertentu
+      description: |
+        Mendapatkan daftar anime dari season dan tahun tertentu.
+        Season: winter (Jan-Mar), spring (Apr-Jun), summer (Jul-Sep), fall (Oct-Dec)
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Tahun (contoh 2024)
+          example: 2024
+        - name: season
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: ["winter", "spring", "summer", "fall"]
+          description: Season (winter/spring/summer/fall)
+          example: "fall"
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["tv", "movie", "ova", "special", "ona"]
+          description: Filter berdasarkan tipe
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Anime season berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnimeSearchResult'
+
+  /seasons/upcoming:
+    get:
+      operationId: getUpcomingSeasonAnime
+      summary: Dapatkan anime upcoming (yang akan datang)
+      description: |
+        Mendapatkan daftar anime yang akan tayang dalam season mendatang.
+        Berguna untuk menemukan anime baru yang akan rilis.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+            maximum: 25
+      responses:
+        "200":
+          description: Upcoming anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnimeSearchResult'
+
+  /random/anime:
+    get:
+      operationId: getRandomAnime
+      summary: Dapatkan anime random untuk discovery
+      description: |
+        Mendapatkan anime random dari database MyAnimeList.
+        Berguna untuk discovery dan menemukan anime baru yang unexpected.
+      responses:
+        "200":
+          description: Random anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnimeDetails'
+
+  /genres/anime:
+    get:
+      operationId: getAnimeGenres
+      summary: Dapatkan daftar genre anime
+      description: Mengambil daftar lengkap genre anime yang tersedia di MyAnimeList
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["genres", "explicit_genres", "themes", "demographics"]
+          description: Filter jenis genre (default semua)
+      responses:
+        "200":
+          description: Daftar genre berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        mal_id:
+                          type: integer
+                        name:
+                          type: string
+                        url:
+                          type: string
+                        count:
+                          type: integer
+              example:
+                data:
+                  - mal_id: 1
+                    name: "Action"
+                    count: 4500
+                  - mal_id: 2
+                    name: "Adventure"
+                    count: 3800
+                  - mal_id: 8
+                    name: "Drama"
+                    count: 2900
+
+  /anime/{id}/characters:
+    get:
+      operationId: getAnimeCharacters
+      summary: Dapatkan daftar karakter dari anime
+      description: Mendapatkan daftar karakter yang muncul di anime beserta voice actors
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: MyAnimeList ID anime
+      responses:
+        "200":
+          description: Karakter anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        character:
+                          type: object
+                          properties:
+                            mal_id:
+                              type: integer
+                            name:
+                              type: string
+                            images:
+                              type: object
+                        role:
+                          type: string
+                          description: Main, Supporting, dll
+                        voice_actors:
+                          type: array
+
+  /anime/{id}/reviews:
+    get:
+      operationId: getAnimeReviews
+      summary: Dapatkan review anime dari user
+      description: Mendapatkan review yang ditulis user MyAnimeList untuk anime tertentu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: MyAnimeList ID anime
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Review anime berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user:
+                          type: object
+                        score:
+                          type: integer
+                        review:
+                          type: string
+                        votes:
+                          type: integer
+
+components:
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        last_visible_page:
+          type: integer
+        has_next_page:
+          type: boolean
+        current_page:
+          type: integer
+        items:
+          type: object
+          properties:
+            count:
+              type: integer
+            total:
+              type: integer
+            per_page:
+              type: integer
+
+    AnimeImages:
+      type: object
+      properties:
+        jpg:
+          type: object
+          properties:
+            image_url:
+              type: string
+              description: URL image JPG
+            small_image_url:
+              type: string
+            large_image_url:
+              type: string
+        webp:
+          type: object
+          properties:
+            image_url:
+              type: string
+            small_image_url:
+              type: string
+            large_image_url:
+              type: string
+
+    AnimeSearchResult:
+      type: object
+      description: Hasil pencarian anime (ringkasan)
+      properties:
+        mal_id:
+          type: integer
+          description: MyAnimeList ID unik
+        title:
+          type: string
+          description: Judul anime (Romaji/Japanese)
+        title_english:
+          type: string
+          nullable: true
+          description: Judul bahasa Inggris
+        title_japanese:
+          type: string
+          nullable: true
+          description: Judul bahasa Jepang
+        type:
+          type: string
+          description: Tipe (TV, Movie, OVA, Special, ONA, Music)
+          enum: ["TV", "Movie", "OVA", "Special", "ONA", "Music"]
+        episodes:
+          type: integer
+          nullable: true
+          description: Jumlah episode
+        status:
+          type: string
+          description: Status tayang
+        score:
+          type: number
+          format: float
+          nullable: true
+          description: Rating rata-rata (0-10)
+        scored_by:
+          type: integer
+          description: Jumlah user yang memberi rating
+        rank:
+          type: integer
+          nullable: true
+          description: Ranking di MyAnimeList
+        popularity:
+          type: integer
+          description: Ranking popularitas
+        synopsis:
+          type: string
+          nullable: true
+          description: Sinopsis anime
+        rating:
+          type: string
+          nullable: true
+          description: Rating usia (G, PG, PG-13, R-17+, R+, Rx)
+        images:
+          $ref: '#/components/schemas/AnimeImages'
+        genres:
+          type: array
+          items:
+            type: object
+            properties:
+              mal_id:
+                type: integer
+              name:
+                type: string
+
+    AnimeDetails:
+      type: object
+      description: Detail lengkap anime
+      properties:
+        mal_id:
+          type: integer
+        title:
+          type: string
+        title_english:
+          type: string
+          nullable: true
+        title_japanese:
+          type: string
+          nullable: true
+        type:
+          type: string
+        source:
+          type: string
+          description: Sumber adaptasi (Manga, Light novel, Original, dll)
+        episodes:
+          type: integer
+          nullable: true
+        status:
+          type: string
+        aired:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+              nullable: true
+        duration:
+          type: string
+          description: Durasi per episode
+        rating:
+          type: string
+        score:
+          type: number
+          format: float
+          nullable: true
+        scored_by:
+          type: integer
+        rank:
+          type: integer
+          nullable: true
+        popularity:
+          type: integer
+        members:
+          type: integer
+          description: Jumlah members yang add anime ini
+        favorites:
+          type: integer
+          description: Jumlah user yang favorite anime ini
+        synopsis:
+          type: string
+          nullable: true
+        background:
+          type: string
+          nullable: true
+          description: Info background/trivia
+        season:
+          type: string
+          nullable: true
+          enum: ["winter", "spring", "summer", "fall"]
+        year:
+          type: integer
+          nullable: true
+        broadcast:
+          type: object
+          properties:
+            day:
+              type: string
+            time:
+              type: string
+            timezone:
+              type: string
+        producers:
+          type: array
+          items:
+            type: object
+            properties:
+              mal_id:
+                type: integer
+              name:
+                type: string
+        licensors:
+          type: array
+          items:
+            type: object
+        studios:
+          type: array
+          items:
+            type: object
+            properties:
+              mal_id:
+                type: integer
+              name:
+                type: string
+        genres:
+          type: array
+          items:
+            type: object
+            properties:
+              mal_id:
+                type: integer
+              name:
+                type: string
+        themes:
+          type: array
+          items:
+            type: object
+        demographics:
+          type: array
+          items:
+            type: object
+        images:
+          $ref: '#/components/schemas/AnimeImages'
+        trailer:
+          type: object
+          properties:
+            youtube_id:
+              type: string
+            url:
+              type: string
+
+    AnimeFullDetails:
+      allOf:
+        - $ref: '#/components/schemas/AnimeDetails'
+        - type: object
+          properties:
+            relations:
+              type: array
+              description: Anime terkait (sequel, prequel, side story, dll)
+            theme:
+              type: object
+              properties:
+                openings:
+                  type: array
+                  items:
+                    type: string
+                endings:
+                  type: array
+                  items:
+                    type: string
+            external:
+              type: array
+              description: Link eksternal (Official site, dll)
+            streaming:
+              type: array
+              description: Platform streaming
