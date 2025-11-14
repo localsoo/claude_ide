@@ -1,0 +1,530 @@
+openapi: 3.1.0
+info:
+  title: TMDb API for GPT
+  version: 1.0.0
+  description: |
+    API untuk pencarian film, detail film, dan rekomendasi menggunakan The Movie Database (TMDb).
+
+    **Fitur:**
+    - 🔍 Pencarian film dengan kata kunci
+    - 📽️ Detail lengkap film (judul, overview, rating, dll)
+    - 🎬 Rekomendasi film berdasarkan film tertentu
+    - 🌍 Support multi-bahasa
+
+    **Cara Penggunaan:**
+    1. Dapatkan API key dari https://www.themoviedb.org/settings/api
+    2. Gunakan API key sebagai query parameter `api_key` di setiap request
+    3. Semua endpoint memerlukan API key untuk autentikasi
+
+servers:
+  - url: https://api.themoviedb.org/3
+    description: TMDb API Production Server
+
+paths:
+  /search/movie:
+    get:
+      operationId: searchMovie
+      summary: Cari film berdasarkan kata kunci
+      description: |
+        Mencari film berdasarkan judul atau kata kunci. Mendukung pencarian dengan filter tahun.
+        Hasil dikembalikan dalam format pagination.
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+          example: "your_api_key_here"
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Kata kunci judul film yang ingin dicari
+          example: "Inception"
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa untuk hasil (id-ID untuk Indonesia, en-US untuk English)
+          example: "id-ID"
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter berdasarkan tahun rilis
+          example: 2010
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman hasil (untuk pagination)
+          example: 1
+        - name: include_adult
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Sertakan konten dewasa dalam hasil
+      responses:
+        "200":
+          description: Hasil pencarian film berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    description: Halaman saat ini
+                  results:
+                    type: array
+                    description: Array hasil pencarian film
+                    items:
+                      $ref: '#/components/schemas/MovieSearchResult'
+                  total_pages:
+                    type: integer
+                    description: Total halaman tersedia
+                  total_results:
+                    type: integer
+                    description: Total hasil ditemukan
+              example:
+                page: 1
+                results:
+                  - id: 27205
+                    title: "Inception"
+                    original_title: "Inception"
+                    overview: "Dom Cobb adalah pencuri terampil..."
+                    release_date: "2010-07-16"
+                    vote_average: 8.4
+                    vote_count: 32000
+                    poster_path: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"
+                    backdrop_path: "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg"
+                    popularity: 65.5
+                total_pages: 1
+                total_results: 5
+        "401":
+          description: API key tidak valid
+        "404":
+          description: Tidak ada hasil ditemukan
+
+  /movie/{movie_id}:
+    get:
+      operationId: getMovieDetails
+      summary: Ambil detail lengkap film
+      description: |
+        Mengambil informasi detail lengkap tentang film berdasarkan ID TMDb.
+        Termasuk judul, overview, rating, budget, revenue, genre, dan lainnya.
+      parameters:
+        - name: movie_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID film di TMDb (dapatkan dari search)
+          example: 27205
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+          example: "your_api_key_here"
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa untuk hasil
+          example: "id-ID"
+      responses:
+        "200":
+          description: Detail film berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieDetails'
+              example:
+                id: 27205
+                title: "Inception"
+                original_title: "Inception"
+                tagline: "Your mind is the scene of the crime"
+                overview: "Dom Cobb adalah pencuri terampil..."
+                release_date: "2010-07-16"
+                runtime: 148
+                vote_average: 8.4
+                vote_count: 32000
+                popularity: 65.5
+                budget: 160000000
+                revenue: 829895144
+                status: "Released"
+                genres:
+                  - id: 28
+                    name: "Action"
+                  - id: 878
+                    name: "Science Fiction"
+                poster_path: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"
+                backdrop_path: "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg"
+        "401":
+          description: API key tidak valid
+        "404":
+          description: Film tidak ditemukan
+
+  /movie/{movie_id}/recommendations:
+    get:
+      operationId: getMovieRecommendations
+      summary: Ambil rekomendasi film serupa
+      description: |
+        Mendapatkan rekomendasi film yang serupa dengan film tertentu.
+        Berguna untuk memberikan saran "film sejenis" kepada pengguna.
+      parameters:
+        - name: movie_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID film sumber untuk mendapat rekomendasi
+          example: 27205
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+          example: "your_api_key_here"
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa untuk hasil
+          example: "id-ID"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman hasil
+          example: 1
+      responses:
+        "200":
+          description: Rekomendasi film berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieSearchResult'
+                  total_pages:
+                    type: integer
+                  total_results:
+                    type: integer
+              example:
+                page: 1
+                results:
+                  - id: 155
+                    title: "The Dark Knight"
+                    overview: "Batman menaikkan taruhannya..."
+                    release_date: "2008-07-18"
+                    vote_average: 8.5
+                total_pages: 2
+                total_results: 25
+        "401":
+          description: API key tidak valid
+        "404":
+          description: Film tidak ditemukan
+
+  /discover/movie:
+    get:
+      operationId: discoverMovies
+      summary: Jelajahi film dengan berbagai filter
+      description: |
+        Menemukan film dengan berbagai filter seperti genre, rating, tahun, dll.
+        Sangat berguna untuk mendapat rekomendasi berdasarkan kriteria tertentu.
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            default: "popularity.desc"
+            enum:
+              - "popularity.asc"
+              - "popularity.desc"
+              - "release_date.asc"
+              - "release_date.desc"
+              - "vote_average.asc"
+              - "vote_average.desc"
+              - "vote_count.asc"
+              - "vote_count.desc"
+          description: Cara sorting hasil
+        - name: with_genres
+          in: query
+          schema:
+            type: string
+          description: Filter berdasarkan genre (pisahkan dengan koma untuk multiple)
+          example: "28,12"
+        - name: primary_release_year
+          in: query
+          schema:
+            type: integer
+          description: Filter berdasarkan tahun rilis
+          example: 2023
+        - name: vote_average.gte
+          in: query
+          schema:
+            type: number
+          description: Rating minimum (0-10)
+          example: 7.0
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Film ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieSearchResult'
+                  total_pages:
+                    type: integer
+                  total_results:
+                    type: integer
+
+  /genre/movie/list:
+    get:
+      operationId: getMovieGenres
+      summary: Dapatkan daftar genre film
+      description: Mengambil daftar lengkap genre film yang tersedia di TMDb
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa
+      responses:
+        "200":
+          description: Daftar genre berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genres:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+              example:
+                genres:
+                  - id: 28
+                    name: "Aksi"
+                  - id: 12
+                    name: "Petualangan"
+                  - id: 16
+                    name: "Animasi"
+
+components:
+  schemas:
+    MovieSearchResult:
+      type: object
+      description: Hasil pencarian film (ringkasan)
+      properties:
+        id:
+          type: integer
+          description: ID unik film di TMDb
+        title:
+          type: string
+          description: Judul film (diterjemahkan jika ada)
+        original_title:
+          type: string
+          description: Judul asli film
+        overview:
+          type: string
+          description: Sinopsis/ringkasan film
+        release_date:
+          type: string
+          format: date
+          description: Tanggal rilis (YYYY-MM-DD)
+        vote_average:
+          type: number
+          format: float
+          description: Rating rata-rata (0-10)
+        vote_count:
+          type: integer
+          description: Jumlah vote/rating
+        popularity:
+          type: number
+          format: float
+          description: Skor popularitas
+        poster_path:
+          type: string
+          nullable: true
+          description: Path poster (tambahkan https://image.tmdb.org/t/p/w500)
+        backdrop_path:
+          type: string
+          nullable: true
+          description: Path backdrop (tambahkan https://image.tmdb.org/t/p/original)
+        adult:
+          type: boolean
+          description: Apakah konten dewasa
+        genre_ids:
+          type: array
+          items:
+            type: integer
+          description: Array ID genre
+
+    MovieDetails:
+      type: object
+      description: Detail lengkap film
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        original_title:
+          type: string
+        tagline:
+          type: string
+          description: Tagline/slogan film
+        overview:
+          type: string
+        release_date:
+          type: string
+          format: date
+        runtime:
+          type: integer
+          description: Durasi dalam menit
+        vote_average:
+          type: number
+          format: float
+        vote_count:
+          type: integer
+        popularity:
+          type: number
+        budget:
+          type: integer
+          description: Budget produksi (USD)
+        revenue:
+          type: integer
+          description: Pendapatan (USD)
+        status:
+          type: string
+          description: Status rilis (Released, Post Production, dll)
+        genres:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        poster_path:
+          type: string
+          nullable: true
+        backdrop_path:
+          type: string
+          nullable: true
+        homepage:
+          type: string
+          nullable: true
+          description: Website resmi film
+        imdb_id:
+          type: string
+          nullable: true
+          description: ID film di IMDb
+        production_companies:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              logo_path:
+                type: string
+                nullable: true
+        production_countries:
+          type: array
+          items:
+            type: object
+            properties:
+              iso_3166_1:
+                type: string
+              name:
+                type: string
+        spoken_languages:
+          type: array
+          items:
+            type: object
+            properties:
+              iso_639_1:
+                type: string
+              name:
+                type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: api_key
+      description: |
+        TMDb API Key - Dapatkan dari https://www.themoviedb.org/settings/api
+
+        Cara mendapatkan API key:
+        1. Daftar/login ke TMDb
+        2. Buka Settings > API
+        3. Request API key (pilih Developer)
+        4. Isi form aplikasi
+        5. Copy API key Anda
+
+security:
+  - ApiKeyAuth: []
