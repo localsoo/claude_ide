@@ -57,8 +57,9 @@ Capabilities:
 - Cari film berdasarkan judul atau kata kunci
 - Tampilkan detail lengkap film (judul, sinopsis, rating, tahun rilis, genre, budget, revenue)
 - Berikan rekomendasi film serupa
+- Tampilkan film trending, top rated, dan popular
 - Bantu pengguna menemukan film berdasarkan genre, tahun, atau rating tertentu
-- Tampilkan poster dan backdrop film (gunakan URL: https://image.tmdb.org/t/p/w500{poster_path})
+- Tampilkan poster film sebagai IMAGE langsung di chat
 
 Guidelines:
 - Selalu gunakan bahasa Indonesia (language=id-ID) kecuali user minta bahasa lain
@@ -66,19 +67,26 @@ Guidelines:
 - Sertakan emoji yang relevan untuk membuat response lebih menarik
 - Jika mencari film, tampilkan top 5-10 hasil terbaik
 - Untuk rekomendasi, jelaskan mengapa film tersebut direkomendasikan
-- Sertakan link poster film jika tersedia
 - Format tanggal rilis dengan format readable (contoh: 16 Juli 2010)
 - Tampilkan budget dan revenue dalam format yang mudah dibaca (contoh: $160 juta)
 
-Contoh Response:
-"🎬 **Inception** (2010)
-⭐ Rating: 8.4/10 dari 32,000 votes
-📝 Sinopsis: Dom Cobb adalah pencuri terampil...
-🎭 Genre: Action, Science Fiction
-⏱️ Durasi: 148 menit
-💰 Budget: $160 juta | Revenue: $829 juta
+PENTING - Cara Menampilkan Poster:
+- SELALU tampilkan poster sebagai IMAGE menggunakan markdown image syntax
+- Format: ![Judul Film](https://image.tmdb.org/t/p/w500{poster_path})
+- Jika poster_path ada, WAJIB tampilkan sebagai image, BUKAN hanya link
+- Gunakan w500 untuk ukuran poster yang optimal
 
-🖼️ [Lihat Poster](https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg)
+Contoh Response dengan Poster:
+"🎬 **Inception** (2010)
+
+![Poster Inception](https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg)
+
+⭐ Rating: 8.4/10 dari 32,000 votes
+📝 Sinopsis: Dom Cobb adalah pencuri terampil dalam seni extraction, mencuri rahasia dari alam bawah sadar seseorang saat mereka bermimpi...
+🎭 Genre: Action, Science Fiction, Thriller
+⏱️ Durasi: 148 menit
+📅 Rilis: 16 Juli 2010
+💰 Budget: $160 juta | Revenue: $829 juta
 
 Mau rekomendasi film serupa? 🎥"
 ```
@@ -313,25 +321,73 @@ GET /movie/popular?api_key={key}&language=id-ID
 
 **Response:** Array film populer berdasarkan views dan interaksi
 
-## 🖼️ Menampilkan Poster & Backdrop
+## 🖼️ Menampilkan Poster Sebagai Image di ChatGPT
 
-TMDb menyediakan image dengan berbagai ukuran. Format URL:
+### PENTING: Tampilkan Poster Langsung, Bukan Hanya Link!
+
+Custom GPT Anda **HARUS** menampilkan poster sebagai **IMAGE langsung** di chat menggunakan markdown image syntax.
+
+### ✅ Yang Benar - Tampilkan Image Langsung
+
+GPT Instructions sudah dikonfigurasi untuk menampilkan poster seperti ini:
+
+```markdown
+🎬 **Inception** (2010)
+
+![Poster Inception](https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg)
+
+⭐ Rating: 8.4/10
+```
+
+**Hasil:** Poster tampil langsung sebagai gambar di ChatGPT ✅
+
+### ❌ Yang Salah - Hanya Link
+
+```markdown
+🎬 **Inception** (2010)
+Poster: https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg
+```
+
+**Hasil:** User harus klik link untuk lihat poster ❌
+
+### Format URL Poster
+
+TMDb menyediakan image dengan berbagai ukuran:
 
 ```
-https://image.tmdb.org/t/p/{size}{path}
+https://image.tmdb.org/t/p/{size}{poster_path}
 ```
 
 **Ukuran Poster:**
-- `w92`, `w154`, `w185`, `w342`, `w500`, `w780`, `original`
+- `w92` - Thumbnail kecil (92px)
+- `w154` - Thumbnail sedang (154px)
+- `w185` - Preview kecil (185px)
+- `w342` - Preview sedang (342px)
+- **`w500`** - **RECOMMENDED untuk ChatGPT** ✅ (500px)
+- `w780` - Desktop besar (780px)
+- `original` - Ukuran asli (file besar, loading lambat)
 
 **Ukuran Backdrop:**
 - `w300`, `w780`, `w1280`, `original`
 
-**Contoh:**
+### Contoh Markdown Image Syntax
+
+```markdown
+![Poster Inception](https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg)
 ```
-Poster: https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg
-Backdrop: https://image.tmdb.org/t/p/original/s3TBrRGB1iav7gFOCNx3H31MoES.jpg
-```
+
+**Breakdown:**
+- `!` - Prefix untuk image (WAJIB!)
+- `[Poster Inception]` - Alt text
+- `(URL)` - URL lengkap poster
+
+### Untuk Panduan Lengkap
+
+Lihat **DISPLAY_POSTER_GUIDE.md** untuk:
+- Template response dengan poster image
+- Format untuk trending, top rated, recommendations
+- Troubleshooting jika poster tidak muncul
+- Best practices design
 
 ## 🎯 Tips & Best Practices
 
@@ -419,6 +475,13 @@ Jika ada pertanyaan atau issue:
 3. Test API dengan Postman/curl terlebih dahulu
 
 ## 📝 Changelog
+
+**v1.2.0** (2025-11-14)
+- ✅ **POSTER DISPLAY**: GPT instructions untuk menampilkan poster sebagai IMAGE
+- ✅ Tambah DISPLAY_POSTER_GUIDE.md - panduan lengkap display poster
+- ✅ Update GPT instructions dengan markdown image syntax
+- ✅ Contoh response dengan poster image yang benar
+- ✅ Best practices untuk multiple movies display
 
 **v1.1.0** (2025-11-14)
 - ✅ Trending movies endpoint (harian/mingguan)
