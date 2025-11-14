@@ -9,12 +9,14 @@ info:
     - 🔍 Pencarian film dengan kata kunci
     - 📽️ Detail lengkap film (judul, overview, rating, dll)
     - 🎬 Rekomendasi film berdasarkan film tertentu
+    - 🔥 Film trending (harian/mingguan)
+    - ⭐ Film terbaik (top rated)
     - 🌍 Support multi-bahasa
 
     **Cara Penggunaan:**
     1. Dapatkan API key dari https://www.themoviedb.org/settings/api
-    2. Gunakan API key sebagai query parameter `api_key` di setiap request
-    3. Semua endpoint memerlukan API key untuk autentikasi
+    2. Masukkan API key di ChatGPT Actions Authentication (bukan YOUR_TMDB_API_KEY)
+    3. API key akan otomatis ditambahkan ke setiap request
 
 servers:
   - url: https://api.themoviedb.org/3
@@ -369,6 +371,197 @@ paths:
                     name: "Petualangan"
                   - id: 16
                     name: "Animasi"
+
+  /trending/movie/{time_window}:
+    get:
+      operationId: getTrendingMovies
+      summary: Dapatkan film trending (populer saat ini)
+      description: |
+        Mendapatkan daftar film yang sedang trending/populer saat ini.
+        Bisa pilih time window: harian (day) atau mingguan (week).
+        Sangat berguna untuk menemukan film yang sedang hits dan banyak dibicarakan.
+      parameters:
+        - name: time_window
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - "day"
+              - "week"
+          description: Periode trending (day = hari ini, week = minggu ini)
+          example: "week"
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman hasil
+      responses:
+        "200":
+          description: Daftar film trending berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieSearchResult'
+                  total_pages:
+                    type: integer
+                  total_results:
+                    type: integer
+              example:
+                page: 1
+                results:
+                  - id: 933260
+                    title: "The Substance"
+                    overview: "Seorang selebriti aging mencoba..."
+                    release_date: "2024-09-07"
+                    vote_average: 7.3
+                    popularity: 2845.5
+                total_pages: 20
+                total_results: 400
+        "401":
+          description: API key tidak valid
+
+  /movie/top_rated:
+    get:
+      operationId: getTopRatedMovies
+      summary: Dapatkan film dengan rating tertinggi sepanjang masa
+      description: |
+        Mendapatkan daftar film dengan rating tertinggi di TMDb.
+        Film-film klasik dan modern terbaik yang paling direkomendasikan.
+        Filter berdasarkan rating minimum untuk kualitas terjamin.
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman hasil
+        - name: region
+          in: query
+          schema:
+            type: string
+          description: Filter berdasarkan region/negara (contoh ID, US, KR)
+          example: "US"
+      responses:
+        "200":
+          description: Daftar film top rated berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieSearchResult'
+                  total_pages:
+                    type: integer
+                  total_results:
+                    type: integer
+              example:
+                page: 1
+                results:
+                  - id: 278
+                    title: "The Shawshank Redemption"
+                    overview: "Dipenjara atas tuduhan pembunuhan..."
+                    release_date: "1994-09-23"
+                    vote_average: 8.7
+                    vote_count: 25000
+                  - id: 238
+                    title: "The Godfather"
+                    overview: "Spanning the years 1945 to 1955..."
+                    release_date: "1972-03-14"
+                    vote_average: 8.7
+                total_pages: 500
+                total_results: 10000
+        "401":
+          description: API key tidak valid
+
+  /movie/popular:
+    get:
+      operationId: getPopularMovies
+      summary: Dapatkan film populer saat ini
+      description: |
+        Mendapatkan daftar film yang sedang populer berdasarkan jumlah views dan interaksi.
+        Berbeda dengan trending, popular lebih stabil dan tidak berubah terlalu cepat.
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key TMDb Anda
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: "id-ID"
+          description: Kode bahasa
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman hasil
+        - name: region
+          in: query
+          schema:
+            type: string
+          description: Filter berdasarkan region/negara
+      responses:
+        "200":
+          description: Daftar film populer berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieSearchResult'
+                  total_pages:
+                    type: integer
+                  total_results:
+                    type: integer
+        "401":
+          description: API key tidak valid
 
 components:
   schemas:

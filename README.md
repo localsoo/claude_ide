@@ -7,6 +7,9 @@ OpenAPI specification untuk mengintegrasikan TMDb (The Movie Database) dengan Cu
 - ✅ **Pencarian Film** - Cari film berdasarkan judul/kata kunci
 - ✅ **Detail Film** - Dapatkan informasi lengkap film (rating, sinopsis, dll)
 - ✅ **Rekomendasi** - Saran film serupa berdasarkan film tertentu
+- ✅ **Trending Movies** - Film yang sedang trending harian/mingguan
+- ✅ **Top Rated** - Film dengan rating tertinggi sepanjang masa
+- ✅ **Popular Movies** - Film populer saat ini
 - ✅ **Discover** - Jelajahi film dengan filter genre, tahun, rating
 - ✅ **Genre List** - Daftar lengkap genre film
 - ✅ **Multi-bahasa** - Support Bahasa Indonesia dan English
@@ -82,10 +85,10 @@ Mau rekomendasi film serupa? 🎥"
 
 **Conversation starters:**
 ```
+Apa film yang sedang trending minggu ini?
+Tampilkan 10 film terbaik sepanjang masa
 Carikan film aksi terbaik tahun 2023
-Apa saja film sci-fi dengan rating tinggi?
 Rekomendasikan film serupa dengan Inception
-Cari film Marvel Universe terbaru
 ```
 
 ### 3. Import OpenAPI Schema
@@ -160,6 +163,30 @@ Carikan film sci-fi dengan rating di atas 8.0
 - Memanggil `getMovieGenres` untuk dapatkan genre ID sci-fi
 - Memanggil `discoverMovies` dengan filter genre dan rating
 - Menampilkan hasil yang sesuai kriteria
+
+### Film Trending
+
+**User:**
+```
+Apa film yang sedang trending minggu ini?
+```
+
+**GPT akan:**
+- Memanggil `getTrendingMovies` dengan time_window="week"
+- Menampilkan 10-20 film yang sedang trending
+- Menjelaskan mengapa film tersebut trending
+
+### Top Rated Movies
+
+**User:**
+```
+Tampilkan 10 film terbaik sepanjang masa
+```
+
+**GPT akan:**
+- Memanggil `getTopRatedMovies`
+- Menampilkan film dengan rating tertinggi
+- Termasuk info rating dan jumlah votes
 
 ## 📊 Endpoint Reference
 
@@ -237,6 +264,54 @@ GET /genre/movie/list?api_key={key}&language=id-ID
 **Use Case:** Daftar semua genre film
 
 **Response:** Array genre dengan id dan name
+
+---
+
+### 6. Get Trending Movies
+```
+GET /trending/movie/{time_window}?api_key={key}&language=id-ID
+```
+
+**Use Case:** Film yang sedang trending/populer saat ini
+
+**Parameters:**
+- `time_window` (required): `day` atau `week`
+- `language`: Bahasa hasil
+- `page`: Nomor halaman
+
+**Response:** Array film trending dengan popularity score
+
+---
+
+### 7. Get Top Rated Movies
+```
+GET /movie/top_rated?api_key={key}&language=id-ID
+```
+
+**Use Case:** Film dengan rating tertinggi sepanjang masa
+
+**Parameters:**
+- `language`: Bahasa hasil
+- `page`: Nomor halaman
+- `region`: Filter berdasarkan region (opsional)
+
+**Response:** Array film dengan rating tertinggi (8.0+)
+
+---
+
+### 8. Get Popular Movies
+```
+GET /movie/popular?api_key={key}&language=id-ID
+```
+
+**Use Case:** Film populer saat ini
+
+**Parameters:**
+- `language`: Bahasa hasil
+- `page`: Nomor halaman
+- `region`: Filter berdasarkan region (opsional)
+
+**Response:** Array film populer berdasarkan views dan interaksi
 
 ## 🖼️ Menampilkan Poster & Backdrop
 
@@ -344,6 +419,13 @@ Jika ada pertanyaan atau issue:
 3. Test API dengan Postman/curl terlebih dahulu
 
 ## 📝 Changelog
+
+**v1.1.0** (2025-11-14)
+- ✅ Trending movies endpoint (harian/mingguan)
+- ✅ Top rated movies endpoint
+- ✅ Popular movies endpoint
+- ✅ Perbaikan dokumentasi API key authentication
+- ✅ Update contoh penggunaan
 
 **v1.0.0** (2025-11-14)
 - ✅ Initial release

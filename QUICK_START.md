@@ -7,6 +7,11 @@ Panduan cepat untuk setup TMDb API di Custom GPT dalam 5 menit!
 - `tmdb-openapi.yaml` - OpenAPI specification untuk GPT Actions
 - `README.md` - Dokumentasi lengkap
 
+## ⚠️ PENTING: Setup API Key
+
+**JANGAN** gunakan `YOUR_TMDB_API_KEY` sebagai API key!
+Anda harus memasukkan **API key asli** dari TMDb di ChatGPT Actions Authentication.
+
 ## ⚡ Setup Cepat (5 Langkah)
 
 ### 1️⃣ Dapatkan TMDb API Key
@@ -85,6 +90,14 @@ Apa film sci-fi dengan rating tinggi?
 Setelah setup, coba queries ini:
 
 ```
+Apa film yang sedang trending minggu ini?
+```
+
+```
+Tampilkan 10 film terbaik sepanjang masa
+```
+
+```
 Carikan film Inception
 ```
 
@@ -97,7 +110,7 @@ Cari film action dengan rating di atas 8.0
 ```
 
 ```
-Apa film terbaru Marvel tahun 2024?
+Apa film populer saat ini?
 ```
 
 ## 🔧 Troubleshooting Cepat
@@ -122,6 +135,9 @@ Apa film terbaru Marvel tahun 2024?
 | `searchMovie` | Cari film by keyword |
 | `getMovieDetails` | Detail lengkap film |
 | `getMovieRecommendations` | Film serupa |
+| `getTrendingMovies` | Film trending hari ini/minggu ini |
+| `getTopRatedMovies` | Film rating tertinggi sepanjang masa |
+| `getPopularMovies` | Film populer saat ini |
 | `discoverMovies` | Filter genre/rating/tahun |
 | `getMovieGenres` | List semua genre |
 
@@ -156,6 +172,9 @@ Custom GPT Anda sekarang bisa:
 - ✅ Mencari film dari 1 juta+ database TMDb
 - ✅ Menampilkan detail lengkap (rating, sinopsis, budget, revenue)
 - ✅ Memberikan rekomendasi cerdas
+- ✅ Menampilkan film trending harian/mingguan
+- ✅ Menampilkan top rated movies sepanjang masa
+- ✅ Menampilkan film populer saat ini
 - ✅ Filter berdasarkan genre, tahun, rating
 - ✅ Support multi-bahasa
 
